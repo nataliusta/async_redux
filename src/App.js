@@ -5,6 +5,9 @@ import Cart from './components/Cart/Cart';
 import Layout from './components/Layout/Layout';
 import Products from './components/Shop/Products';
 import { uiActions } from './store/ui-slice';
+import Notification from './components/UI/Notification';
+
+let isInitial = true;
 
 function App() {
   const dispatch = useDispatch();
@@ -26,13 +29,8 @@ function App() {
       });
 
       if (!response.ok) {
-          dispatch(uiActions.showNotification({
-            status: 'error',
-            title: 'Error!',
-            message: 'Sending cart data failed!'
-          })
-        );
-      }
+        throw new Error('Sending cart data failed!');
+      }  
 
         dispatch(uiActions.showNotification({
           status: 'success',
@@ -41,13 +39,33 @@ function App() {
         })
       );
     };
+
+    if (isInitial) {
+      isInitial = false;
+      return;
+    }
+
+    sendCartData().catch((error) => {
+        dispatch(
+          uiActions.showNotification({
+            status: 'error',
+            title: 'Error!',
+            message: 'Sending cart data failed!'
+        })
+      );
+    });
   }, [cart, dispatch]);
 
   return (
     <Fragment>
+      {notification && <Notification 
+        status={notification.status} 
+        title={notification.title} 
+        message={notification.message} />
+      }
       <Layout>
         {isShown && <Cart />}
-        <Products />
+      <Products />
       </Layout>
     </Fragment>
   );
